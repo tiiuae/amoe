@@ -2,7 +2,7 @@
 
 [![Project Website](https://img.shields.io/badge/Project-Website-blue)](https://sofianchay.github.io/amoe/)
 [![arXiv](https://img.shields.io/badge/arXiv-2512.20157-b31b1b.svg)](https://arxiv.org/abs/2512.20157)
-[![Hugging Face Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model(soon)-yellow)]()
+[![Hugging Face Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/tiiuae/amoe)
 [![Hugging Face Datasets](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Dataset(soon)-green)]()
 
 A vision encoder distilled from DINOv3 and SigLIP2 teachers, supporting multi-resolution image understanding with Mixture-of-Experts (MoE) architecture.
@@ -74,6 +74,33 @@ Sample output:
 
 ![PCA visualization sample 1](pca_maps_amoe/pca_visualizations/pca_instance.png)
 
+## HF usage 
+
+```python
+import torch
+from PIL import Image
+from transformers import AutoModel, AutoImageProcessor
+
+# Load model and processor
+model_id = "tiiuae/amoe" 
+model = AutoModel.from_pretrained(model_id, trust_remote_code=True).to("cuda", dtype=torch.bfloat16)
+processor = AutoImageProcessor.from_pretrained(model_id, trust_remote_code=True)
+
+# Preprocess image
+image = Image.open("image.jpg").convert("RGB")
+inputs = processor(image, return_tensors="pt").to("cuda")
+inputs["pixel_values"] = inputs["pixel_values"].to(torch.bfloat16)
+
+# Inference
+with torch.no_grad():
+    outputs = model(**inputs)
+
+# Access specialized features
+# Options: 'amoe' (768d), 'siglip2' (1152d), 'dinov3' (1024d)
+patch_features = outputs["patch_features"]["amoe"]    # (Batch, Tokens, 768)
+summary_features = outputs["summary_features"]["siglip2"] # (Batch, 1152)
+
+```
 ## Citation
 
 If you use AMoE in your research, please cite:
