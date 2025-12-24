@@ -73,3 +73,17 @@ python pca_maps.py \
 Sample output:
 
 ![PCA visualization sample 1](pca_maps_amoe/pca_visualizations/pca_instance.png)
+
+## Citation
+
+If you use AMoE in your research, please cite:
+
+```bibtex
+@article{chaybouti2025amoe,
+  title={AMOE: Agglomerative Mixture-of-Experts Vision Foundation Models},
+  author={Chaybouti, Sofian and Narayan, Sanath and Dahou, Yasser and Le Khac, Phuc H. and Singh, Ankit and Huynh, Ngoc Dung and Para, Wamiq Reyaz and Kuehne, Hilde and Hacid, Hakim},
+  journal={arXiv preprint arXiv:2512.20157},
+  year={2025}
+}
+```
+
