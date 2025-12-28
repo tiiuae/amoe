@@ -13,7 +13,7 @@ A vision encoder distilled from DINOv3 and SigLIP2 teachers, supporting multi-re
 ## Installation
 
 ```bash
-wget https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe_ckpt.pt  
+wget https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe_ckpt_paper_version.pt  
 pip install -r requirements.txt
 pip install -e .
 ```
