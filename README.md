@@ -15,11 +15,11 @@ A vision encoder distilled from DINOv3 and SigLIP2 teachers, supporting multi-re
 
 | Model | Architecture | Active Params | Total Params | Config Name | Checkpoint |
 |-------|-------------|--------------|-------------|-------------|------------|
-| AMoE | MoE (top-6/28) | 0.15B | 0.6B | `18-layers-distillation` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe_ckpt_paper_version.pt) |
-| AMoE-Ultrasparse | MoE (top-2/28) | 0.15B | 0.6B | `ultrasparse` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/ultrasparse.pt) |
-| AMoE-Dense-L | Dense | 0.6B | 0.6B | `dense-L` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-L.pt) |
-| AMoE-Dense-S | Dense | 0.07B | 0.07B | `dense-S` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-S.pt) |
-| AMoE-Dense-XS | Dense | 0.03B | 0.03B | `dense-XS` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-XS.pt) |
+| AMoE-0.3B | MoE (top-6/28) | 0.3B | 0.6B | `18-layers-distillation` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe_ckpt_paper_version.pt) |
+| AMoE-0.15B | MoE (top-2/28) | 0.15B | 0.6B | `ultrasparse` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/ultrasparse.pt) |
+| AMoE-Dense-0.6B | Dense | 0.6B | 0.6B | `dense-L` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-L.pt) |
+| AMoE-Dense-70M | Dense | 0.07B | 0.07B | `dense-S` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-S.pt) |
+| AMoE-Dense-30M | Dense | 0.03B | 0.03B | `dense-XS` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-XS.pt) |
 
 ## Installation
 
@@ -30,7 +30,7 @@ pip install -e .
 
 ## Quick Start
 
-### AMoE-Ultrasparse (MoE, 0.15B active / 0.6B total)
+### AMoE-0.15B (MoE, top-2/28, 0.15B active / 0.6B total)
 
 ```python
 from amoe import load_amoe_model
@@ -71,7 +71,7 @@ with torch.no_grad():
     amoe_features = outputs["patch_features"]["amoe"]  # (N, L, 768)
 ```
 
-### AMoE-Dense-L (Dense, 0.6B)
+### AMoE-Dense-0.6B
 
 ```python
 from amoe import load_amoe_model
@@ -111,6 +111,50 @@ with torch.no_grad():
     # Native model features
     amoe_features = outputs["patch_features"]["amoe"]  # (N, L, 1280)
 ```
+
+## Results
+
+All results use ensemble features (combined DINOv3 + SigLIP2 heads) unless noted.
+
+### kNN Classification (512x512)
+
+| Model | Params (active) | ImageNet | CUB-200 | Food-101 | DTD | Aircraft | Flowers-102 | Avg |
+|-------|----------------|----------|---------|----------|-----|----------|-------------|-----|
+| AMoE-0.3B | 0.3B | 85.9 | 88.9 | 95.5 | 80.6 | 92.3 | 99.8 | 90.5 |
+| AMoE-0.15B | 0.15B | 85.0 | 88.2 | 94.6 | 79.9 | 91.5 | 99.8 | 89.8 |
+| AMoE-Dense-0.6B | 0.6B | 86.1 | 89.2 | 95.8 | 81.1 | 92.3 | 99.8 | 90.7 |
+| AMoE-Dense-70M | 0.07B | 81.7 | 84.8 | 90.2 | 77.3 | 83.3 | 99.6 | 86.2 |
+| AMoE-Dense-30M | 0.03B | 79.0 | 80.9 | 87.5 | 75.7 | 77.3 | 99.2 | 83.3 |
+
+### Zero-Shot Image-Text Classification (512x512)
+
+| Model | ImageNet | CUB-200 | Food-101 | DTD | Aircraft | Flowers-102 | Caltech-101 | Avg |
+|-------|----------|---------|----------|-----|----------|-------------|-------------|-----|
+| AMoE-0.3B | 79.9 | 82.6 | 94.6 | 69.9 | 83.5 | 88.6 | 88.4 | 83.9 |
+| AMoE-0.15B | 78.8 | 80.9 | 93.4 | 69.5 | 81.4 | 89.0 | 88.6 | 83.1 |
+| AMoE-Dense-0.6B | 80.5 | 83.0 | 95.0 | 71.1 | 82.4 | 89.0 | 89.9 | 84.4 |
+| AMoE-Dense-70M | 71.2 | 70.7 | 85.2 | 65.7 | 60.1 | 84.0 | 88.3 | 75.0 |
+| AMoE-Dense-30M | 65.1 | 59.9 | 80.3 | 62.9 | 48.3 | 77.4 | 87.2 | 68.7 |
+
+### Retrieval R@1 (512x512)
+
+| Model | Flickr30K T2I | Flickr30K I2T | MSCOCO T2I | MSCOCO I2T |
+|-------|--------------|--------------|------------|------------|
+| AMoE-0.3B | 81.6 | 94.6 | 54.7 | 70.8 |
+| AMoE-0.15B | 81.0 | 92.9 | 54.2 | 71.1 |
+| AMoE-Dense-0.6B | 81.9 | 94.2 | 55.6 | 72.9 |
+| AMoE-Dense-70M | 77.5 | 90.5 | 50.4 | 65.4 |
+| AMoE-Dense-30M | 72.9 | 82.2 | 46.6 | 59.7 |
+
+### Linear Segmentation mIoU (1024x1024)
+
+| Model | Pascal VOC | Cityscapes |
+|-------|-----------|------------|
+| AMoE-0.3B | 88.9 | 65.4 |
+| AMoE-0.15B | 88.1 | 63.6 |
+| AMoE-Dense-0.6B | 89.8 | 67.3 |
+| AMoE-Dense-70M | 84.8 | 61.6 |
+| AMoE-Dense-30M | 82.1 | 59.2 |
 
 ## PCA Visualization
 

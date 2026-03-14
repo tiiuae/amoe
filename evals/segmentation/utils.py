@@ -13,6 +13,7 @@ from amoe.utils import FEATURE_DIM_DICT, PATCH_SIZE, load_amoe_model
 
 def build_backbone_and_processor(
     ckpt_path: str,
+    configs: str,
     device: torch.device = torch.device("cuda"),
     feature_type: str = "dinov3",
     dtype: torch.dtype = torch.bfloat16,
@@ -32,6 +33,7 @@ def build_backbone_and_processor(
     # Load model
     model, image_processor = load_amoe_model(
         checkpoint_path=ckpt_path,
+        config_name=configs,
         device=device,
         dtype=dtype,
         do_resize=False
@@ -110,58 +112,110 @@ class AMOELinearSeg(nn.Module):
         self,
         pixel_values: torch.Tensor,
         spatial_shape: torch.Tensor,
+        upsample: bool = False,
     ) -> torch.Tensor:
         """
         Forward pass for segmentation.
-        
+
         Args:
-            pixel_values: Image patches (N, L, C)
-            spatial_shape: Spatial shape (N, 2)
-        
-        Returns:
-            Segmentation logits (N, num_classes, H, W)
+            upsample: If True, bilinear-upsample logits to (image_size, image_size).
+                      If False, return logits at patch resolution (fast, for training).
         """
-        # Extract features
-        with torch.inference_mode():
+        # Extract features (use no_grad, NOT inference_mode — inference_mode
+        # tensors break autograd for the head's backward pass)
+        with torch.no_grad():
             outputs = self.backbone(
             pixel_values=pixel_values,
             spatial_shapes=spatial_shape,
             compile=True,
             )
-        
-        # Get patch features for the desired type
-        feats = outputs["patch_features"][self.feature_type]  # (N, L, D)
-        
+
+        # Get patch features for the desired type — detach to cut graph
+        feats = outputs["patch_features"][self.feature_type].detach()  # (N, L, D)
+
         N, L, D = feats.shape
         H_patch = int(spatial_shape[0, 0].item())
         W_patch = int(spatial_shape[0, 1].item())
-        
+
         # Reshape to spatial grid
         feats = feats.view(N, H_patch, W_patch, D)
         feats = feats.permute(0, 3, 1, 2).contiguous()  # (N, D, H_patch, W_patch)
-        
-        # Apply segmentation head
+
         logits = self.head(feats)  # (N, C, H_patch, W_patch)
-        
-        # Upsample to image size
-        logits = F.interpolate(
-            logits,
-            size=(self.image_size, self.image_size),
-            mode="bilinear",
-            align_corners=False,
-        )
+        if upsample:
+            logits = F.interpolate(
+                logits,
+                size=(self.image_size, self.image_size),
+                mode="bilinear",
+                align_corners=False,
+            )
         return logits
-    
-    def forward_from_precomputed(self, feats: torch.Tensor) -> torch.Tensor:
+
+    def forward_from_precomputed(self, feats: torch.Tensor, upsample: bool = False) -> torch.Tensor:
         """Forward using precomputed features."""
         logits = self.head(feats)
-        logits = F.interpolate(
-            logits,
-            size=(self.image_size, self.image_size),
-            mode="bilinear",
-            align_corners=False,
-        )
+        if upsample:
+            logits = F.interpolate(
+                logits,
+                size=(self.image_size, self.image_size),
+                mode="bilinear",
+                align_corners=False,
+            )
         return logits
+
+
+class PrecomputedFeatureDataset(Dataset):
+    """Dataset wrapping precomputed spatial feature maps and target masks."""
+
+    def __init__(self, features: list[torch.Tensor], targets: list[torch.Tensor]):
+        self.features = features
+        self.targets = targets
+
+    def __len__(self):
+        return len(self.features)
+
+    def __getitem__(self, idx):
+        return self.features[idx], self.targets[idx]
+
+
+@torch.no_grad()
+def precompute_features(
+    backbone: AMOEBackbone,
+    dataloader,
+    feature_type: str,
+    device: torch.device,
+):
+    """Run backbone once over the entire dataloader, return (features_list, targets_list).
+
+    Each feature tensor is (D, H_patch, W_patch) already reshaped to spatial grid.
+    Stored on CPU to avoid GPU OOM.
+    """
+    backbone.eval()
+    all_features = []
+    all_targets = []
+    for batch in dataloader:
+        pixel_values = batch["pixel_values"].to(device, non_blocking=True)
+        spatial_shape = batch["spatial_shape"].to(device, non_blocking=True)
+        targets = batch["targets"]  # keep on CPU
+
+        with torch.inference_mode():
+            outputs = backbone(
+                pixel_values=pixel_values,
+                spatial_shapes=spatial_shape,
+                compile=False,
+            )
+
+        feats = outputs["patch_features"][feature_type]  # (N, L, D)
+        N, L, D = feats.shape
+        H_patch = int(spatial_shape[0, 0].item())
+        W_patch = int(spatial_shape[0, 1].item())
+        feats = feats.view(N, H_patch, W_patch, D).permute(0, 3, 1, 2).contiguous()  # (N, D, H, W)
+
+        for i in range(N):
+            all_features.append(feats[i].cpu())
+            all_targets.append(targets[i])
+
+    return all_features, all_targets
 
 
 def make_collate_fn(

@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
@@ -16,7 +17,17 @@ from utils import (
     make_collate_fn,
     AMOELinearSeg,
     FEATURE_DIM_DICT,
+    PATCH_SIZE,
 )
+
+
+def downsample_targets(targets: torch.Tensor, patch_size: int) -> torch.Tensor:
+    """Downsample (B, H, W) long targets to patch grid via nearest interpolation."""
+    return F.interpolate(
+        targets.unsqueeze(1).float(),
+        scale_factor=1.0 / patch_size,
+        mode="nearest",
+    ).squeeze(1).long()
 
 # --------------------
 # Datasets
@@ -81,7 +92,7 @@ def evaluate_seg(model, dataloader, criterion, num_classes: int, device='cuda'):
         spatial_shape = batch["spatial_shape"].to(device, non_blocking=True)
         targets = batch["targets"].to(device, non_blocking=True)  # Long
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            logits = model(pixel_values, spatial_shape)
+            logits = model(pixel_values, spatial_shape, upsample=True)
             loss = criterion(logits, targets)
             val_loss += loss.detach().float()
 
@@ -117,6 +128,7 @@ def parse_args():
     p = argparse.ArgumentParser("ADE20K segmentation evaluation using Falcon-Omni (distilled, multi-teacher packing) backbone")
     p.add_argument("--root_dir", type=str, default="/lustre1/tier2/users/sofian.chaybouti/ade20k/ADEChallengeData2016", help="Root directory of ADE20K dataset")
     p.add_argument("--ckpt_path", type=str, required=True, help="Path to Falcon-Omni distilled checkpoint (training output checkpoint)")
+    p.add_argument("--configs", type=str, required=True, help="Model config name in amoe/configs.py")
     p.add_argument("--feature_type", type=str, default="dinov3", choices=["dinov3", "amoe", "siglip2"])
     p.add_argument("--batch_size", type=int, default=16)
     p.add_argument("--epochs", type=int, default=10)
@@ -150,6 +162,7 @@ def main():
     with torch.inference_mode():
         backbone, image_processor = build_backbone_and_processor(
             ckpt_path=args.ckpt_path,
+            configs=args.configs,
             device=device,
             feature_type=args.feature_type,
         )
@@ -197,8 +210,9 @@ def main():
             pixel_values = batch["pixel_values"].to(device, non_blocking=True)
             spatial_shape = batch["spatial_shape"].to(device, non_blocking=True)
             targets = batch["targets"].to(device, non_blocking=True)
+            targets = downsample_targets(targets, PATCH_SIZE)
             optimizer.zero_grad(set_to_none=True)
-            logits = model(pixel_values, spatial_shape)
+            logits = model(pixel_values, spatial_shape)  # patch resolution (no upsample)
             loss = criterion(logits, targets)
             loss.backward()
             optimizer.step()

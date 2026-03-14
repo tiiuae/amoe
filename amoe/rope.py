@@ -106,8 +106,8 @@ def apply_golden_freqs_cis_to_visual_pos(freqs_hFP: torch.Tensor, pos_BSP: torch
     """Apply golden frequencies to visual positions."""
     img_mask_BS = E.reduce(~torch.isnan(pos_BSP), 'b s p -> b s', reduction='all')
     pos_tP = pos_BSP[img_mask_BS].float()
-    theta_thF = torch.einsum('tp,hfp->thf', pos_tP, freqs_hFP)
-    return torch.polar(torch.ones_like(theta_thF), theta_thF)
+    theta_thF = torch.einsum('tp,hfp->thf', pos_tP, freqs_hFP.float())
+    return torch.polar(torch.ones_like(theta_thF.float()), theta_thF.float())
 
 
 def apply_golden_rotary_emb(

@@ -322,6 +322,11 @@ class AMOE(nn.Module):
         
         return patches, spatial_shape
 
+    _cached_block_mask: BlockMask | None = None
+    _cached_mask_key: tuple | None = None
+    _cached_thw_pos: torch.Tensor | None = None
+    _cached_thw_key: tuple | None = None
+
     def _build_vision_mask(
         self,
         full_mask: torch.Tensor,
@@ -329,29 +334,38 @@ class AMOE(nn.Module):
         block_size: int = 64,
     ) -> BlockMask:
         """Build attention mask using the padding mask.
-        
+
         Args:
             full_mask: (N, S) boolean mask where True = valid, False = padding
             device: torch device
             block_size: FlexAttention block size
-        
+
         Returns:
             BlockMask for FlexAttention
         """
         N, S = full_mask.shape
-        
+
+        # Cache key: shape + content hash (avoids recompiling create_block_mask
+        # on every forward when the mask is unchanged, e.g. fixed-resolution eval)
+        mask_key = (N, S, full_mask.sum().item(), device)
+        if self._cached_mask_key == mask_key and self._cached_block_mask is not None:
+            return self._cached_block_mask
+
         # Create mask matrix: attend only if BOTH q and kv are valid (non-padding)
         # full_mask[b, i] is True if position i in batch b is valid
         valid_q = full_mask.unsqueeze(-1)  # (N, S, 1)
         valid_kv = full_mask.unsqueeze(-2)  # (N, 1, S)
         mask_matrix = valid_q & valid_kv  # (N, S, S)
-        
+
         def mask_mod(b, h, q_idx, kv_idx):
             return mask_matrix[b, q_idx, kv_idx]
-        
-        return create_attention_mask(
+
+        block_mask = create_attention_mask(
             mask_mod, N, None, S, S, BLOCK_SIZE=(block_size, block_size)
         )
+        self._cached_block_mask = block_mask
+        self._cached_mask_key = mask_key
+        return block_mask
 
     def _get_thw_pos(
         self,
@@ -365,6 +379,11 @@ class AMOE(nn.Module):
         R = 1 + self.n_storage_tokens  # CLS + registers
         S = R + num_patches_per_image  # Total sequence per image
 
+        # Cache: reuse when batch size and spatial shapes are unchanged
+        thw_key = (N, num_patches_per_image, device)
+        if self._cached_thw_key == thw_key and self._cached_thw_pos is not None:
+            return self._cached_thw_pos.clone()
+
         tpos = torch.zeros((N, S), dtype=torch.float32, device=device)
         hpos = torch.zeros((N, S), dtype=torch.float32, device=device)
         wpos = torch.zeros((N, S), dtype=torch.float32, device=device)
@@ -372,17 +391,17 @@ class AMOE(nn.Module):
         # Patch positions start after CLS and registers
         for n in range(N):
             H, W = spatial_shapes[n].tolist()
-            
+
             # Compute normalized positions
             h_coords = torch.arange(H, device=device).float()
             w_coords = torch.arange(W, device=device).float()
-            
+
             xlim = (W / H) ** 0.5
             ylim = (H / W) ** 0.5
-            
+
             h_norm = -ylim + 2 * ylim * h_coords / max(H - 1, 1)
             w_norm = -xlim + 2 * xlim * w_coords / max(W - 1, 1)
-            
+
             # Fill patch positions
             for i in range(H):
                 for j in range(W):
@@ -390,12 +409,15 @@ class AMOE(nn.Module):
                     if idx < S:
                         hpos[n, idx] = h_norm[i]
                         wpos[n, idx] = w_norm[j]
-            
+
             # Set NaN for non-patch positions
             hpos[n, :R] = float('nan')
             wpos[n, :R] = float('nan')
 
-        return torch.stack([tpos, hpos, wpos], dim=0)  # (3, N, S)
+        result = torch.stack([tpos, hpos, wpos], dim=0)  # (3, N, S)
+        self._cached_thw_pos = result
+        self._cached_thw_key = thw_key
+        return result
 
     def forward(
         self,

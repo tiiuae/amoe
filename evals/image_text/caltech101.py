@@ -125,6 +125,7 @@ def setup_text_embeddings_for_caltech(
 def main():
     parser = argparse.ArgumentParser("Caltech-101 Zero-shot Classification (DINOv3/SigLIP2 multi-teacher) with ensembling")
     parser.add_argument("--ckpt_path", type=str, required=True)
+    parser.add_argument("--configs", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
 
     # Data paths
@@ -176,6 +177,7 @@ def main():
     # Model + IO
     model, image_processor = build_model_and_io(
         ckpt_path=args.ckpt_path,
+        configs=args.configs,
         device=args.device,
         max_pixels=args.max_pixels,
     )

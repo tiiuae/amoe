@@ -14,11 +14,13 @@ from amoe import load_amoe_model
 
 def build_model_and_io(
     ckpt_path: str,
+    configs: str,
     device: str,
     max_pixels_sqrt: int = 256,
 ):
     model, image_processor = load_amoe_model(
         checkpoint_path=ckpt_path,
+        config_name=configs,
         device=device,
         max_pixels=max_pixels_sqrt**2,
     )

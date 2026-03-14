@@ -123,6 +123,7 @@ class CUBDataset(Dataset):
 def main():
     parser = argparse.ArgumentParser("CUB-200-2011 kNN Classification")
     parser.add_argument("--ckpt_path", type=str, required=True)
+    parser.add_argument("--configs", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
     
     # Data paths
@@ -160,6 +161,7 @@ def main():
     # Model
     model, image_processor = build_model_and_io(
         ckpt_path=args.ckpt_path,
+        configs=args.configs,
         device=args.device,
         max_pixels=args.max_pixels,
     )

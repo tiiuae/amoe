@@ -42,11 +42,13 @@ def make_collate_fn(image_processor, max_pixels: int):
 
 def build_model_and_io(
     ckpt_path: str,
+    configs: str,
     device: str,
     max_pixels: int,
 ):
     model, image_processor = load_amoe_model(
         checkpoint_path=ckpt_path,
+        config_name=configs,
         device=device,
         max_pixels=max_pixels,
     )

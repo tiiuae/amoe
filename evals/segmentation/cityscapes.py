@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
@@ -17,6 +18,7 @@ from utils import (
     make_collate_fn,
     AMOELinearSeg,
     FEATURE_DIM_DICT,
+    PATCH_SIZE,
 )
 
 # Cityscapes labelId -> trainId mapping (unlabeled set to 255)
@@ -40,6 +42,16 @@ ID_TO_TRAINID[28] = 15  # bus
 ID_TO_TRAINID[31] = 16  # train
 ID_TO_TRAINID[32] = 17  # motorcycle
 ID_TO_TRAINID[33] = 18  # bicycle
+
+
+def downsample_targets(targets: torch.Tensor, patch_size: int) -> torch.Tensor:
+    """Downsample (B, H, W) long targets to patch grid via nearest interpolation."""
+    return F.interpolate(
+        targets.unsqueeze(1).float(),
+        scale_factor=1.0 / patch_size,
+        mode="nearest",
+    ).squeeze(1).long()
+
 
 class HFCityscapesDataset(Dataset):
     def __init__(self, split='train', image_size=256, repo_id='Chris1/cityscapes'):
@@ -78,7 +90,7 @@ def evaluate_cityscapes(model, dataloader, criterion, num_classes: int, ignore_i
         pixel_values = batch["pixel_values"].to(device, non_blocking=True)
         spatial_shape = batch["spatial_shape"].to(device, non_blocking=True)
         targets = batch["targets"].to(device, non_blocking=True)
-        logits = model(pixel_values, spatial_shape)
+        logits = model(pixel_values, spatial_shape, upsample=True)
         loss = criterion(logits, targets)
         val_loss += loss.item()
 
@@ -105,6 +117,7 @@ def evaluate_cityscapes(model, dataloader, criterion, num_classes: int, ignore_i
 def parse_args():
     p = argparse.ArgumentParser("Cityscapes segmentation using Falcon Vision backbone")
     p.add_argument("--ckpt_path", type=str, required=True, help="Path to checkpoint")
+    p.add_argument("--configs", type=str, required=True, help="Model config name in amoe/configs.py")
     p.add_argument("--feature_type", type=str, default="dinov3", choices=["dinov3", "amoe", "siglip2"])
     p.add_argument("--batch_size", type=int, default=16)
     p.add_argument("--epochs", type=int, default=10)
@@ -130,6 +143,7 @@ def main():
 
     backbone, image_processor = build_backbone_and_processor(
         ckpt_path=args.ckpt_path,
+        configs=args.configs,
         device=device,
         feature_type=args.feature_type,
     )
@@ -170,7 +184,8 @@ def main():
             pixel_values = batch["pixel_values"].to(device, non_blocking=True)
             spatial_shape = batch["spatial_shape"].to(device, non_blocking=True)
             targets = batch["targets"].to(device, non_blocking=True)
-            logits = seg_model(pixel_values, spatial_shape)
+            targets = downsample_targets(targets, PATCH_SIZE)
+            logits = seg_model(pixel_values, spatial_shape)  # patch resolution (no upsample)
 
             optimizer.zero_grad(set_to_none=True)
             loss = criterion(logits, targets)
