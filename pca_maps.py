@@ -253,7 +253,7 @@ def main():
     parser.add_argument("--input_dir", type=str, required=True, help="Directory containing images")
     parser.add_argument("--output_path", type=str, required=True, help="Base output directory")
     parser.add_argument("--num_samples", type=int, default=10, help="Number of images to sample")
-    parser.add_argument("--config_name", type=str, default="18-layers-distillation")
+    parser.add_argument("--config_name", type=str, default="amoe-0.3B")
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--max_num_patches", type=int, default=256)
     args = parser.parse_args()

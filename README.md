@@ -2,24 +2,26 @@
 
 **Accepted at CVPR 2026**
 
-[![Project Website](https://img.shields.io/badge/Project-Website-blue)](https://sofianchay.github.io/amoe/)
-[![arXiv](https://img.shields.io/badge/arXiv-2512.20157-b31b1b.svg)](https://arxiv.org/abs/2512.20157)
-[![Hugging Face Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/tiiuae/amoe)
-[![Hugging Face Datasets](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Dataset(soon)-green)]()
+[Project Website](https://sofianchay.github.io/amoe/)
+[arXiv](https://arxiv.org/abs/2512.20157)
+[Hugging Face Models](https://huggingface.co/tiiuae/amoe)
+[Hugging Face Datasets]()
 
 A vision encoder distilled from DINOv3 and SigLIP2 teachers, supporting multi-resolution image understanding with Mixture-of-Experts (MoE) architecture.
 
-![Main fig](./main_fig.png)
+Main fig
 
 ## Model Zoo
 
-| Model | Architecture | Active Params | Total Params | Config Name | Checkpoint |
-|-------|-------------|--------------|-------------|-------------|------------|
-| AMoE-0.3B | MoE (top-6/28) | 0.3B | 0.6B | `18-layers-distillation` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe_ckpt_paper_version.pt) |
-| AMoE-0.15B | MoE (top-2/28) | 0.15B | 0.6B | `ultrasparse` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/ultrasparse.pt) |
-| AMoE-Dense-0.6B | Dense | 0.6B | 0.6B | `dense-L` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-L.pt) |
-| AMoE-Dense-70M | Dense | 0.07B | 0.07B | `dense-S` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-S.pt) |
-| AMoE-Dense-30M | Dense | 0.03B | 0.03B | `dense-XS` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-XS.pt) |
+
+| Model           | Architecture   | Active Params | Total Params | Config Name  | Checkpoint                                                                                 |
+| --------------- | -------------- | ------------- | ------------ | ------------ | ------------------------------------------------------------------------------------------ |
+| AMoE-0.3-0.6B   | MoE (top-6/28) | 0.3B          | 0.6B         | `amoe-0.3B`  | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe-0.3B.pt)  |
+| AMoE-0.15-0.6B  | MoE (top-2/28) | 0.15B         | 0.6B         | `amoe-0.15B` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe-0.15B.pt) |
+| AMoE-Dense-0.6B | Dense          | 0.6B          | 0.6B         | `dense-0.6B` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-0.6B.pt) |
+| AMoE-Dense-70M  | Dense          | 0.07B         | 0.07B        | `dense-70M`  | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-70M.pt)  |
+| AMoE-Dense-30M  | Dense          | 0.03B         | 0.03B        | `dense-30M`  | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-30M.pt)  |
+
 
 ## Installation
 
@@ -38,11 +40,11 @@ from PIL import Image
 import torch
 
 # Download checkpoint
-# wget https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/ultrasparse.pt
+# wget https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe-0.15B.pt
 
 model, processor = load_amoe_model(
-    checkpoint_path="ultrasparse.pt",
-    config_name="ultrasparse",
+    checkpoint_path="amoe-0.15B.pt",
+    config_name="amoe-0.15B",
     device="cuda",
 )
 model = model.to(torch.bfloat16)
@@ -79,11 +81,11 @@ from PIL import Image
 import torch
 
 # Download checkpoint
-# wget https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-L.pt
+# wget https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-0.6B.pt
 
 model, processor = load_amoe_model(
-    checkpoint_path="dense-L.pt",
-    config_name="dense-L",
+    checkpoint_path="dense-0.6B.pt",
+    config_name="dense-0.6B",
     device="cuda",
 )
 model = model.to(torch.bfloat16)
@@ -118,43 +120,51 @@ All results use ensemble features (combined DINOv3 + SigLIP2 heads) unless noted
 
 ### kNN Classification (512x512)
 
-| Model | Params (active) | ImageNet | CUB-200 | Food-101 | DTD | Aircraft | Flowers-102 | Avg |
-|-------|----------------|----------|---------|----------|-----|----------|-------------|-----|
-| AMoE-0.3B | 0.3B | 85.9 | 88.9 | 95.5 | 80.6 | 92.3 | 99.8 | 90.5 |
-| AMoE-0.15B | 0.15B | 85.0 | 88.2 | 94.6 | 79.9 | 91.5 | 99.8 | 89.8 |
-| AMoE-Dense-0.6B | 0.6B | 86.1 | 89.2 | 95.8 | 81.1 | 92.3 | 99.8 | 90.7 |
-| AMoE-Dense-70M | 0.07B | 81.7 | 84.8 | 90.2 | 77.3 | 83.3 | 99.6 | 86.2 |
-| AMoE-Dense-30M | 0.03B | 79.0 | 80.9 | 87.5 | 75.7 | 77.3 | 99.2 | 83.3 |
+
+| Model           | Params (active) | ImageNet | CUB-200 | Food-101 | DTD  | Aircraft | Flowers-102 | Avg  |
+| --------------- | --------------- | -------- | ------- | -------- | ---- | -------- | ----------- | ---- |
+| AMoE-0.3B       | 0.3B            | 85.9     | 88.9    | 95.5     | 80.6 | 92.3     | 99.8        | 90.5 |
+| AMoE-0.15B      | 0.15B           | 85.0     | 88.2    | 94.6     | 79.9 | 91.5     | 99.8        | 89.8 |
+| AMoE-Dense-0.6B | 0.6B            | 86.1     | 89.2    | 95.8     | 81.1 | 92.3     | 99.8        | 90.7 |
+| AMoE-Dense-70M  | 0.07B           | 81.7     | 84.8    | 90.2     | 77.3 | 83.3     | 99.6        | 86.2 |
+| AMoE-Dense-30M  | 0.03B           | 79.0     | 80.9    | 87.5     | 75.7 | 77.3     | 99.2        | 83.3 |
+
 
 ### Zero-Shot Image-Text Classification (512x512)
 
-| Model | ImageNet | CUB-200 | Food-101 | DTD | Aircraft | Flowers-102 | Caltech-101 | Avg |
-|-------|----------|---------|----------|-----|----------|-------------|-------------|-----|
-| AMoE-0.3B | 79.9 | 82.6 | 94.6 | 69.9 | 83.5 | 88.6 | 88.4 | 83.9 |
-| AMoE-0.15B | 78.8 | 80.9 | 93.4 | 69.5 | 81.4 | 89.0 | 88.6 | 83.1 |
-| AMoE-Dense-0.6B | 80.5 | 83.0 | 95.0 | 71.1 | 82.4 | 89.0 | 89.9 | 84.4 |
-| AMoE-Dense-70M | 71.2 | 70.7 | 85.2 | 65.7 | 60.1 | 84.0 | 88.3 | 75.0 |
-| AMoE-Dense-30M | 65.1 | 59.9 | 80.3 | 62.9 | 48.3 | 77.4 | 87.2 | 68.7 |
+
+| Model           | ImageNet | CUB-200 | Food-101 | DTD  | Aircraft | Flowers-102 | Caltech-101 | Avg  |
+| --------------- | -------- | ------- | -------- | ---- | -------- | ----------- | ----------- | ---- |
+| AMoE-0.3B       | 79.9     | 82.6    | 94.6     | 69.9 | 83.5     | 88.6        | 88.4        | 83.9 |
+| AMoE-0.15B      | 78.8     | 80.9    | 93.4     | 69.5 | 81.4     | 89.0        | 88.6        | 83.1 |
+| AMoE-Dense-0.6B | 80.5     | 83.0    | 95.0     | 71.1 | 82.4     | 89.0        | 89.9        | 84.4 |
+| AMoE-Dense-70M  | 71.2     | 70.7    | 85.2     | 65.7 | 60.1     | 84.0        | 88.3        | 75.0 |
+| AMoE-Dense-30M  | 65.1     | 59.9    | 80.3     | 62.9 | 48.3     | 77.4        | 87.2        | 68.7 |
+
 
 ### Retrieval R@1 (512x512)
 
-| Model | Flickr30K T2I | Flickr30K I2T | MSCOCO T2I | MSCOCO I2T |
-|-------|--------------|--------------|------------|------------|
-| AMoE-0.3B | 81.6 | 94.6 | 54.7 | 70.8 |
-| AMoE-0.15B | 81.0 | 92.9 | 54.2 | 71.1 |
-| AMoE-Dense-0.6B | 81.9 | 94.2 | 55.6 | 72.9 |
-| AMoE-Dense-70M | 77.5 | 90.5 | 50.4 | 65.4 |
-| AMoE-Dense-30M | 72.9 | 82.2 | 46.6 | 59.7 |
+
+| Model           | Flickr30K T2I | Flickr30K I2T | MSCOCO T2I | MSCOCO I2T |
+| --------------- | ------------- | ------------- | ---------- | ---------- |
+| AMoE-0.3B       | 81.6          | 94.6          | 54.7       | 70.8       |
+| AMoE-0.15B      | 81.0          | 92.9          | 54.2       | 71.1       |
+| AMoE-Dense-0.6B | 81.9          | 94.2          | 55.6       | 72.9       |
+| AMoE-Dense-70M  | 77.5          | 90.5          | 50.4       | 65.4       |
+| AMoE-Dense-30M  | 72.9          | 82.2          | 46.6       | 59.7       |
+
 
 ### Linear Segmentation mIoU (1024x1024)
 
-| Model | Pascal VOC | Cityscapes |
-|-------|-----------|------------|
-| AMoE-0.3B | 88.9 | 65.4 |
-| AMoE-0.15B | 88.1 | 63.6 |
-| AMoE-Dense-0.6B | 89.8 | 67.3 |
-| AMoE-Dense-70M | 84.8 | 61.6 |
-| AMoE-Dense-30M | 82.1 | 59.2 |
+
+| Model           | Pascal VOC | Cityscapes |
+| --------------- | ---------- | ---------- |
+| AMoE-0.3B       | 88.9       | 65.4       |
+| AMoE-0.15B      | 88.1       | 63.6       |
+| AMoE-Dense-0.6B | 89.8       | 67.3       |
+| AMoE-Dense-70M  | 84.8       | 61.6       |
+| AMoE-Dense-30M  | 82.1       | 59.2       |
+
 
 ## PCA Visualization
 
@@ -170,7 +180,7 @@ python pca_maps.py \
 
 Sample output:
 
-![PCA visualization sample 1](pca_maps_amoe/pca_visualizations/pca_instance.png)
+PCA visualization sample 1
 
 ## HF usage
 
@@ -180,7 +190,7 @@ from PIL import Image
 from transformers import AutoModel, AutoImageProcessor
 
 # Load model and processor
-model_id = "tiiuae/amoe"
+model_id = "tiiuae/amoe-0.3B-0.6B"
 model = AutoModel.from_pretrained(model_id, trust_remote_code=True).to("cuda", dtype=torch.bfloat16)
 processor = AutoImageProcessor.from_pretrained(model_id, trust_remote_code=True)
 
@@ -199,6 +209,7 @@ patch_features = outputs["patch_features"]["amoe"]    # (Batch, Tokens, 768)
 summary_features = outputs["summary_features"]["siglip2"] # (Batch, 1152)
 
 ```
+
 ## Citation
 
 If you use AMoE in your research, please cite:
@@ -211,3 +222,4 @@ If you use AMoE in your research, please cite:
   year={2025}
 }
 ```
+

@@ -60,7 +60,7 @@ class AMOEArgs:
 
 # Pre-defined configurations
 amoe_configs = {
-    "18-layers-distillation": AMOEArgs(
+    "amoe-0.3B": AMOEArgs(
         n_layers=18,
         n_heads=8,
         head_dim=128,
@@ -78,7 +78,7 @@ amoe_configs = {
         use_qk_norm=True,
     ),
 
-    "ultrasparse": AMOEArgs(
+    "amoe-0.15B": AMOEArgs(
         n_layers=18,
         n_heads=8,
         head_dim=128,
@@ -96,7 +96,7 @@ amoe_configs = {
         use_qk_norm=True,
     ),
 
-    "dense-L": AMOEArgs(
+    "dense-0.6B": AMOEArgs(
         n_layers=18,
         n_heads=16,
         head_dim=80,
@@ -116,7 +116,7 @@ amoe_configs = {
         use_qk_norm=True,
     ),
 
-    "dense-XS": AMOEArgs(
+    "dense-30M": AMOEArgs(
         n_layers=12,
         n_heads=6,
         head_dim=64,
@@ -138,7 +138,7 @@ amoe_configs = {
         parameterized_norm=False,
     ),
 
-    "dense-S": AMOEArgs(
+    "dense-70M": AMOEArgs(
         n_layers=12,
         n_heads=8,
         head_dim=64,

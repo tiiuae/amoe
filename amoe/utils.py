@@ -17,7 +17,7 @@ from .image_processor import AMOEImageProcessor
 
 def load_amoe_model(
     checkpoint_path: str,
-    config_name: str = "18-layers-distillation",
+    config_name: str = "amoe-0.3B",
     device: Union[str, torch.device] = "cuda",
     dtype: torch.dtype | None = None,
     **kwargs,
