@@ -9,7 +9,7 @@
 
 This work stems from the **CVPR 2026 AMoE paper**, which designs and applies distillation into a Mixture-of-Experts (MoE) vision architecture. We have chosen the name **SigLino** for better clarity (SigLIP2 + DINOv3).
 
-SigLino is a vision encoder distilled from DINOv3 and SigLIP2 teachers, supporting multi-resolution image understanding with a Mixture-of-Experts (MoE) architecture.
+SigLino is a collection of vision encoders distilled from DINOv3 and SigLIP2 teachers, supporting multi-resolution image understanding.
 
 <p align="center">
   <img src="main_fig.png" width="800">
