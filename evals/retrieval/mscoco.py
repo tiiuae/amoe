@@ -20,7 +20,7 @@ from utils import (
 def main():
     parser = argparse.ArgumentParser(description='MSCOCO retrieval with multi-teacher DistilTransformer (DINOv3 + SigLIP2)')
     parser.add_argument('--ckpt_path', type=str, required=True, help='Path to DistilTransformer checkpoint')
-    parser.add_argument('--configs', type=str, required=True, help='Model config name in amoe/configs.py')
+    parser.add_argument('--configs', type=str, required=True, help='Model config name in siglino/configs.py')
     parser.add_argument('--output_dir', type=str, required=True, help='Directory to save results JSON')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size for processing')
     parser.add_argument('--device', type=str, default="cuda:0", help='Device to use for inference')

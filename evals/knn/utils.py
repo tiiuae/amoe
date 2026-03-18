@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 import sys
 import os
 
-from amoe import load_amoe_model
+from siglino import load_siglino_model
 
 def make_collate_fn(image_processor, max_num_patches: int):
     def _collate(batch):
@@ -33,7 +33,7 @@ def build_model_and_io(
     device: str,
     max_pixels: int,
 ):
-    model, image_processor = load_amoe_model(
+    model, image_processor = load_siglino_model(
         checkpoint_path=ckpt_path,
         config_name=configs,
         device=device,

@@ -26,7 +26,7 @@ torch.set_float32_matmul_precision("high")
 from sklearn.decomposition import PCA
 
 # Standalone model imports
-from amoe import load_amoe_model
+from siglino import load_siglino_model
 
 
 def load_image(path: str) -> Image.Image:
@@ -74,12 +74,12 @@ def extract_patch_features(
         # Features are (N, L, D) - squeeze batch dimension
         feats_siglip = patch_feats["siglip2"].squeeze(0)  # (L, D)
         feats_dinov3 = patch_feats["dinov3"].squeeze(0)  # (L, D)
-        feats_amoe = patch_feats["amoe"].squeeze(0)  # (L, D)
+        feats_siglino = patch_feats["siglino"].squeeze(0)  # (L, D)
         
         features_per_image.append({
             "features_siglip": feats_siglip,
             "features_dinov3": feats_dinov3,
-            "features_amoe": feats_amoe,
+            "features_siglino": feats_siglino,
             "grid_hw": (H, W),
         })
     
@@ -102,7 +102,7 @@ def render_pca_image(
     title: Optional[str] = None,
 ):
     """Render PCA visualizations for available feature types."""
-    projected_amoe, projected_siglip, projected_dinov3 = projected_L3
+    projected_siglino, projected_siglip, projected_dinov3 = projected_L3
 
     H, W = grid_hw
 
@@ -119,8 +119,8 @@ def render_pca_image(
         viz_items.append(("SigLIP PCA", create_pca_grid(projected_siglip)))
     if projected_dinov3 is not None:
         viz_items.append(("DINO v3 PCA", create_pca_grid(projected_dinov3)))
-    if projected_amoe is not None:
-        viz_items.append(("AMOE PCA", create_pca_grid(projected_amoe)))
+    if projected_siglino is not None:
+        viz_items.append(("SigLino PCA", create_pca_grid(projected_siglino)))
 
     n_cols = max(2, len(viz_items))
     plt.figure(figsize=(4 * n_cols, 8), dpi=200)
@@ -164,7 +164,7 @@ def load_model_and_processor(
     print(f"Loading model with config: {config_name}")
     
     # Load model using the package function
-    model, processor = load_amoe_model(
+    model, processor = load_siglino_model(
         checkpoint_path=ckpt_path,
         config_name=config_name,
         device=device,
@@ -222,23 +222,23 @@ def process_single_image(
     # Extract only valid (non-padding) features
     feats_LD_siglip = info["features_siglip"][:num_valid]
     feats_LD_dinov3 = info["features_dinov3"][:num_valid]
-    feats_LD_amoe = info["features_amoe"][:num_valid]
+    feats_LD_siglino = info["features_siglino"][:num_valid]
     
-    print(f"Feature shapes (valid only) - siglip: {feats_LD_siglip.shape}, dinov3: {feats_LD_dinov3.shape}, amoe: {feats_LD_amoe.shape}")
+    print(f"Feature shapes (valid only) - siglip: {feats_LD_siglip.shape}, dinov3: {feats_LD_dinov3.shape}, siglino: {feats_LD_siglino.shape}")
 
 
     projected_all_siglip = fit_and_project_pca(feats_LD_siglip)
     projected_all_dinov3 = fit_and_project_pca(feats_LD_dinov3)
-    projected_all_amoe = fit_and_project_pca(feats_LD_amoe)
+    projected_all_siglino = fit_and_project_pca(feats_LD_siglino)
     
     image_basename = os.path.splitext(os.path.basename(image_path))[0]
     output_filename = f"{image_basename}_pca_vis.png"
     output_path = os.path.join(output_dir, output_filename)
 
-    print(f"Projected shapes - amoe: {projected_all_amoe.shape}, siglip: {projected_all_siglip.shape}, dinov3: {projected_all_dinov3.shape}")
+    print(f"Projected shapes - siglino: {projected_all_siglino.shape}, siglip: {projected_all_siglip.shape}, dinov3: {projected_all_dinov3.shape}")
     render_pca_image(
         image_rgb=image,
-        projected_L3=(projected_all_amoe, projected_all_siglip, projected_all_dinov3),
+        projected_L3=(projected_all_siglino, projected_all_siglip, projected_all_dinov3),
         grid_hw=info["grid_hw"],
         save_path=output_path,
         title=os.path.basename(image_path),
@@ -248,12 +248,12 @@ def process_single_image(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Visualize PCA of AMOE patch features")
+    parser = argparse.ArgumentParser(description="Visualize PCA of SigLino patch features")
     parser.add_argument("--ckpt_path", type=str, required=True, help="Path to checkpoint")
     parser.add_argument("--input_dir", type=str, required=True, help="Directory containing images")
     parser.add_argument("--output_path", type=str, required=True, help="Base output directory")
     parser.add_argument("--num_samples", type=int, default=10, help="Number of images to sample")
-    parser.add_argument("--config_name", type=str, default="amoe-0.3B")
+    parser.add_argument("--config_name", type=str, default="siglino-0.3B")
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--max_num_patches", type=int, default=256)
     args = parser.parse_args()

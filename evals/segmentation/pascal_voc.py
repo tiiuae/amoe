@@ -18,7 +18,7 @@ from utils import (
     PATCH_SIZE,
     build_backbone_and_processor,
     make_collate_fn,
-    AMOELinearSeg,
+    SigLinoLinearSeg,
 )
 
 
@@ -128,8 +128,8 @@ def evaluate_pascal(model, dataloader, criterion, device='cuda'):
 def parse_args():
     p = argparse.ArgumentParser("Pascal VOC 2012 segmentation using Falcon Vision backbone")
     p.add_argument("--ckpt_path", type=str, required=True, help="Path to checkpoint")
-    p.add_argument("--configs", type=str, required=True, help="Model config name in amoe/configs.py")
-    p.add_argument("--feature_type", type=str, default="dinov3", choices=["dinov3", "amoe", "siglip2"])
+    p.add_argument("--configs", type=str, required=True, help="Model config name in siglino/configs.py")
+    p.add_argument("--feature_type", type=str, default="dinov3", choices=["dinov3", "siglino", "siglip2"])
     p.add_argument("--batch_size", type=int, default=16)
     p.add_argument("--epochs", type=int, default=10)
     p.add_argument("--lr", type=float, default=1e-3)
@@ -158,7 +158,7 @@ def main():
 
     feature_dim = FEATURE_DIM_DICT[args.feature_type]
 
-    model = AMOELinearSeg(
+    model = SigLinoLinearSeg(
         backbone, num_classes=NUM_CLASSES,
         feature_dim=feature_dim, feature_type=args.feature_type,
         image_size=args.image_size

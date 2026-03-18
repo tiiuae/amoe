@@ -15,7 +15,7 @@ import time
 from utils import (
     build_backbone_and_processor,
     make_collate_fn,
-    AMOELinearSeg,
+    SigLinoLinearSeg,
     FEATURE_DIM_DICT,
     PATCH_SIZE,
 )
@@ -128,8 +128,8 @@ def parse_args():
     p = argparse.ArgumentParser("ADE20K segmentation evaluation using Falcon-Omni (distilled, multi-teacher packing) backbone")
     p.add_argument("--root_dir", type=str, default="/lustre1/tier2/users/sofian.chaybouti/ade20k/ADEChallengeData2016", help="Root directory of ADE20K dataset")
     p.add_argument("--ckpt_path", type=str, required=True, help="Path to Falcon-Omni distilled checkpoint (training output checkpoint)")
-    p.add_argument("--configs", type=str, required=True, help="Model config name in amoe/configs.py")
-    p.add_argument("--feature_type", type=str, default="dinov3", choices=["dinov3", "amoe", "siglip2"])
+    p.add_argument("--configs", type=str, required=True, help="Model config name in siglino/configs.py")
+    p.add_argument("--feature_type", type=str, default="dinov3", choices=["dinov3", "siglino", "siglip2"])
     p.add_argument("--batch_size", type=int, default=16)
     p.add_argument("--epochs", type=int, default=10)
     p.add_argument("--lr", type=float, default=1e-3)
@@ -189,7 +189,7 @@ def main():
     feature_dim = FEATURE_DIM_DICT[args.feature_type]
 
     # Model, loss, optimizer
-    model = AMOELinearSeg(
+    model = SigLinoLinearSeg(
         backbone, num_classes=args.num_classes,
         feature_dim=feature_dim, feature_type=args.feature_type,
         image_size=image_size

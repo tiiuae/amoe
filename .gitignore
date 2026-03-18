@@ -20,7 +20,7 @@ env/
 *.swp
 
 # Project specific output/test directories
-test_pca_maps_amoe/
+test_pca_maps_siglino/
 test_standalone_scripts/
 
 # Checkpoints and large files

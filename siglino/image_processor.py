@@ -70,8 +70,8 @@ def pad_along_first_dim(
     return array, mask
 
 
-class AMOEImageProcessor:
-    """Image processor for AMOE model.
+class SigLinoImageProcessor:
+    """Image processor for SigLino model.
         """
     
     def __init__(

@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Usage: ./evals/segmentation/search_lr.sh <script_name> <ckpt_path> <output_dir> <max_res> [feature_type] [extra_args...]
-# Example: ./evals/segmentation/search_lr.sh ade20k checkpoints/model.pt outputs/ade20k 256 amoe --root_dir /path/to/ade20k
+# Example: ./evals/segmentation/search_lr.sh ade20k checkpoints/model.pt outputs/ade20k 256 siglino --root_dir /path/to/ade20k
 
 if [ "$#" -lt 4 ]; then
     echo "Usage: $0 <script_name> <ckpt_path> <output_dir> <max_res> [feature_type] [extra_args...]"
-    echo "Example: $0 ade20k checkpoints/model.pt outputs/ade20k 256 amoe --root_dir /data/ade20k"
+    echo "Example: $0 ade20k checkpoints/model.pt outputs/ade20k 256 siglino --root_dir /data/ade20k"
     exit 1
 fi
 
@@ -14,7 +14,7 @@ SCRIPT_NAME=$1
 CKPT_PATH=$2
 OUTPUT_DIR=$3
 MAX_RES=$4
-FEATURE_TYPE=${5:-"amoe"}
+FEATURE_TYPE=${5:-"siglino"}
 shift 5 
 EXTRA_ARGS=$@
 

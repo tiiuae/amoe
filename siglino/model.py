@@ -8,7 +8,7 @@ from torch import nn
 from torch.nn.attention.flex_attention import BlockMask
 import einops as E
 
-from .configs import AMOEArgs
+from .configs import SigLinoArgs
 from .attention import Attention, create_attention_mask
 from .moe import MoE, FeedForward
 from .rope import (
@@ -99,7 +99,7 @@ class Adapter(nn.Module):
 
 
 class TransformerBlock(nn.Module):
-    def __init__(self, layer_id: int, args: AMOEArgs):
+    def __init__(self, layer_id: int, args: SigLinoArgs):
         super().__init__()
         self.dim = args.dim
         self.parameterized_norm = args.parameterized_norm
@@ -179,12 +179,12 @@ class TransformerBlock(nn.Module):
             self.feed_forward.init_weights(self.weight_init_std)
 
 
-class AMOE(nn.Module):
+class SigLino(nn.Module):
     """
-    AMOE - Agglomeration Mixture of Experts Vision Foundation Model
+    SigLino - Agglomeration Mixture of Experts Vision Foundation Model
     """
 
-    def __init__(self, args: AMOEArgs):
+    def __init__(self, args: SigLinoArgs):
         super().__init__()
         self.args = args
         self.n_layers = args.n_layers
@@ -236,10 +236,10 @@ class AMOE(nn.Module):
         for param in self.siglip2_multihead_attention_pooling_head.parameters():
             param.requires_grad = False
 
-    def _precompute_freqs_cis(self, head_dim: int, args: AMOEArgs) -> torch.Tensor:
+    def _precompute_freqs_cis(self, head_dim: int, args: SigLinoArgs) -> torch.Tensor:
         return precompute_freqs_cis(head_dim, args.max_seq_len, args.rope_theta)
 
-    def _precompute_golden_freqs_cis(self, head_dim: int, args: AMOEArgs) -> torch.Tensor:
+    def _precompute_golden_freqs_cis(self, head_dim: int, args: SigLinoArgs) -> torch.Tensor:
         return precompute_golden_freqs_cis(
             args.n_heads, head_dim, args.rope_min_freqs, args.rope_max_freqs
         )
@@ -437,8 +437,8 @@ class AMOE(nn.Module):
         
         Returns:
             Dictionary with:
-            - "output": patch features {"dinov3": ..., "siglip2": ..., "amoe": ...}
-            - "summary": pooled features {"dinov3": ..., "siglip2": ..., "amoe": ...}
+            - "output": patch features {"dinov3": ..., "siglip2": ..., "siglino": ...}
+            - "summary": pooled features {"dinov3": ..., "siglip2": ..., "siglino": ...}
         """
         # Handle raw images input
         if pixel_values.dim() == 4:
@@ -526,12 +526,12 @@ class AMOE(nn.Module):
             "patch_features": {
                 "dinov3": student_patch_dinov3,
                 "siglip2": student_patch_siglip,
-                "amoe": patch_feats,
+                "siglino": patch_feats,
             },
             "summary_features": {
                 "dinov3": student_cls_dinov3,
                 "siglip2": student_summary_siglip,
-                "amoe": cls_feats,
+                "siglino": cls_feats,
             },
         }
 

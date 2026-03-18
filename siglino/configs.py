@@ -6,7 +6,7 @@ from .moe import MoEArgs
 
 
 @dataclass
-class AMOEArgs:
+class SigLinoArgs:
     """Configuration for Falcon Vision Encoder."""
     dim: int = 768
     n_layers: int = 18
@@ -59,8 +59,8 @@ class AMOEArgs:
 
 
 # Pre-defined configurations
-amoe_configs = {
-    "amoe-0.3B": AMOEArgs(
+siglino_configs = {
+    "siglino-0.3B": SigLinoArgs(
         n_layers=18,
         n_heads=8,
         head_dim=128,
@@ -78,7 +78,7 @@ amoe_configs = {
         use_qk_norm=True,
     ),
 
-    "amoe-0.15B": AMOEArgs(
+    "siglino-0.15B": SigLinoArgs(
         n_layers=18,
         n_heads=8,
         head_dim=128,
@@ -96,7 +96,7 @@ amoe_configs = {
         use_qk_norm=True,
     ),
 
-    "dense-0.6B": AMOEArgs(
+    "dense-0.6B": SigLinoArgs(
         n_layers=18,
         n_heads=16,
         head_dim=80,
@@ -116,7 +116,7 @@ amoe_configs = {
         use_qk_norm=True,
     ),
 
-    "dense-30M": AMOEArgs(
+    "dense-30M": SigLinoArgs(
         n_layers=12,
         n_heads=6,
         head_dim=64,
@@ -138,7 +138,7 @@ amoe_configs = {
         parameterized_norm=False,
     ),
 
-    "dense-70M": AMOEArgs(
+    "dense-70M": SigLinoArgs(
         n_layers=12,
         n_heads=8,
         head_dim=64,

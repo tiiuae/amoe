@@ -9,21 +9,21 @@ from PIL import Image
 from typing import Union, List
 import os
 
-from .model import AMOE
-from .configs import AMOEArgs, amoe_configs
-from .image_processor import AMOEImageProcessor
+from .model import SigLino
+from .configs import SigLinoArgs, siglino_configs
+from .image_processor import SigLinoImageProcessor
 
 
 
-def load_amoe_model(
+def load_siglino_model(
     checkpoint_path: str,
-    config_name: str = "amoe-0.3B",
+    config_name: str = "siglino-0.3B",
     device: Union[str, torch.device] = "cuda",
     dtype: torch.dtype | None = None,
     **kwargs,
-) -> tuple[AMOE, AMOEImageProcessor]:
+) -> tuple[SigLino, SigLinoImageProcessor]:
     """
-    Load a AMOE model from a checkpoint.
+    Load a SigLino model from a checkpoint.
     
     Args:
         checkpoint_path: Path to the model checkpoint
@@ -35,13 +35,13 @@ def load_amoe_model(
         Tuple of (model, image_processor)
     """
     # Get configuration
-    if config_name in amoe_configs:
-        args = amoe_configs[config_name]
+    if config_name in siglino_configs:
+        args = siglino_configs[config_name]
     else:
-        raise ValueError(f"Unknown config: {config_name}. Available: {list(amoe_configs.keys())}")
+        raise ValueError(f"Unknown config: {config_name}. Available: {list(siglino_configs.keys())}")
     
     # Create model
-    model = AMOE(args)
+    model = SigLino(args)
     
     # Standard PyTorch checkpoint
     state_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
@@ -56,7 +56,7 @@ def load_amoe_model(
     model.eval()
     
     # Create image processor
-    image_processor = AMOEImageProcessor(patch_size=args.spatial_patch_size, **kwargs)
+    image_processor = SigLinoImageProcessor(patch_size=args.spatial_patch_size, **kwargs)
     
     return model, image_processor
 
@@ -179,7 +179,7 @@ def load_amoe_model(
 FEATURE_DIM_DICT = {
     "dinov3": 1024,
     "siglip2": 1152,
-    "amoe": 768,  # Model dimension
+    "siglino": 768,  # Model dimension
 }
 
 PATCH_SIZE = 16

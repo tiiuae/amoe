@@ -9,7 +9,7 @@ from transformers import AutoProcessor, AutoModel
 import sys
 import os
 from torch.utils.data import DataLoader, Dataset
-from amoe import load_amoe_model
+from siglino import load_siglino_model
 
 
 def build_model_and_io(
@@ -18,7 +18,7 @@ def build_model_and_io(
     device: str,
     max_pixels_sqrt: int = 256,
 ):
-    model, image_processor = load_amoe_model(
+    model, image_processor = load_siglino_model(
         checkpoint_path=ckpt_path,
         config_name=configs,
         device=device,

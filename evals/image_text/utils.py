@@ -3,7 +3,7 @@ from tqdm.auto import tqdm
 from transformers import AutoProcessor, AutoModel
 import sys
 import os
-from amoe.utils import load_amoe_model
+from siglino.utils import load_siglino_model
 
 
 
@@ -46,7 +46,7 @@ def build_model_and_io(
     device: str,
     max_pixels: int,
 ):
-    model, image_processor = load_amoe_model(
+    model, image_processor = load_siglino_model(
         checkpoint_path=ckpt_path,
         config_name=configs,
         device=device,

@@ -16,7 +16,7 @@ from datasets import load_dataset
 from utils import (
     build_backbone_and_processor,
     make_collate_fn,
-    AMOELinearSeg,
+    SigLinoLinearSeg,
     FEATURE_DIM_DICT,
     PATCH_SIZE,
 )
@@ -117,8 +117,8 @@ def evaluate_cityscapes(model, dataloader, criterion, num_classes: int, ignore_i
 def parse_args():
     p = argparse.ArgumentParser("Cityscapes segmentation using Falcon Vision backbone")
     p.add_argument("--ckpt_path", type=str, required=True, help="Path to checkpoint")
-    p.add_argument("--configs", type=str, required=True, help="Model config name in amoe/configs.py")
-    p.add_argument("--feature_type", type=str, default="dinov3", choices=["dinov3", "amoe", "siglip2"])
+    p.add_argument("--configs", type=str, required=True, help="Model config name in siglino/configs.py")
+    p.add_argument("--feature_type", type=str, default="dinov3", choices=["dinov3", "siglino", "siglip2"])
     p.add_argument("--batch_size", type=int, default=16)
     p.add_argument("--epochs", type=int, default=10)
     p.add_argument("--lr", type=float, default=1e-3)
@@ -150,7 +150,7 @@ def main():
 
     feature_dim = FEATURE_DIM_DICT[args.feature_type]
 
-    seg_model = AMOELinearSeg(
+    seg_model = SigLinoLinearSeg(
         backbone, num_classes=args.num_classes,
         feature_dim=feature_dim, feature_type=args.feature_type,
         image_size=args.image_size

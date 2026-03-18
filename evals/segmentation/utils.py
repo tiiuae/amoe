@@ -7,8 +7,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
 
-from amoe import AMOE
-from amoe.utils import FEATURE_DIM_DICT, PATCH_SIZE, load_amoe_model
+from siglino import SigLino
+from siglino.utils import FEATURE_DIM_DICT, PATCH_SIZE, load_siglino_model
 
 
 def build_backbone_and_processor(
@@ -31,7 +31,7 @@ def build_backbone_and_processor(
         Tuple of (backbone, image_processor)
     """
     # Load model
-    model, image_processor = load_amoe_model(
+    model, image_processor = load_siglino_model(
         checkpoint_path=ckpt_path,
         config_name=configs,
         device=device,
@@ -45,15 +45,15 @@ def build_backbone_and_processor(
     model.eval()
     
     # Wrap in backbone interface
-    backbone = AMOEBackbone(model, feature_type=feature_type)
+    backbone = SigLinoBackbone(model, feature_type=feature_type)
     
     return backbone, image_processor
 
 
-class AMOEBackbone(nn.Module):
+class SigLinoBackbone(nn.Module):
     """Wrapper that provides a unified interface for feature extraction."""
     
-    def __init__(self, model: AMOE, feature_type: str = "dinov3"):
+    def __init__(self, model: SigLino, feature_type: str = "dinov3"):
         super().__init__()
         self.model = model
         self.feature_type = feature_type
@@ -85,12 +85,12 @@ class AMOEBackbone(nn.Module):
         return outputs
 
 
-class AMOELinearSeg(nn.Module):
+class SigLinoLinearSeg(nn.Module):
     """Linear segmentation head on top of Falcon Vision backbone."""
     
     def __init__(
         self,
-        backbone: AMOEBackbone,
+        backbone: SigLinoBackbone,
         num_classes: int = 21,
         feature_dim: int = 1024,
         feature_type: str = "dinov3",
@@ -180,7 +180,7 @@ class PrecomputedFeatureDataset(Dataset):
 
 @torch.no_grad()
 def precompute_features(
-    backbone: AMOEBackbone,
+    backbone: SigLinoBackbone,
     dataloader,
     feature_type: str,
     device: torch.device,
