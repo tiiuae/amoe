@@ -2,7 +2,7 @@
 
 **Accepted at CVPR 2026**
 
-[![Project Website](https://img.shields.io/badge/Project-Website-blue)](https://sofianchay.github.io/siglino/)
+[![Project Website](https://img.shields.io/badge/Project-Website-blue)](https://sofianchay.github.io/amoe/)
 [![arXiv](https://img.shields.io/badge/arXiv-2512.20157-b31b1b.svg)](https://arxiv.org/abs/2512.20157)
 [![Hugging Face Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/collections/tiiuae/siglino-vision-foundation-models)
 [![Hugging Face Datasets](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Dataset(soon)-green)]()
