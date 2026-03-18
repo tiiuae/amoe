@@ -1,27 +1,30 @@
-# AMoE: Agglomerative Mixture-of-Experts Vision Foundation Models
+# SigLino: Vision Foundation Models distilled from SigLIP2 and DINOv3
 
 **Accepted at CVPR 2026**
 
-[![Project Website](https://img.shields.io/badge/Project-Website-blue)](https://sofianchay.github.io/amoe/)
+[![Project Website](https://img.shields.io/badge/Project-Website-blue)](https://sofianchay.github.io/siglino/)
 [![arXiv](https://img.shields.io/badge/arXiv-2512.20157-b31b1b.svg)](https://arxiv.org/abs/2512.20157)
-[![Hugging Face Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/collections/tiiuae/amoe-agglomerative-moe-vision-foundation-models)
+[![Hugging Face Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/collections/tiiuae/siglino-vision-foundation-models)
 [![Hugging Face Datasets](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Dataset(soon)-green)]()
 
+This work stems from the **CVPR 2026 SigLino paper**, which designs and applies distillation into a Mixture-of-Experts (MoE) vision architecture. We have chosen the name **SigLino** for better clarity (SigLIP2 + DINOv3).
 
-A vision encoder distilled from DINOv3 and SigLIP2 teachers, supporting multi-resolution image understanding with Mixture-of-Experts (MoE) architecture.
+SigLino is a vision encoder distilled from DINOv3 and SigLIP2 teachers, supporting multi-resolution image understanding with a Mixture-of-Experts (MoE) architecture.
 
-Main fig
+<p align="center">
+  <img src="main_fig.png" width="800">
+</p>
 
 ## Model Zoo
 
 
-| Model           | Architecture   | Active Params | Total Params | Config Name  | Checkpoint                                                                                 |
-| --------------- | -------------- | ------------- | ------------ | ------------ | ------------------------------------------------------------------------------------------ |
-| AMoE-0.3-0.6B   | MoE (top-6/28) | 0.3B          | 0.6B         | `amoe-0.3B`  | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe-0.3B.pt)  |
-| AMoE-0.15-0.6B  | MoE (top-2/28) | 0.15B         | 0.6B         | `amoe-0.15B` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe-0.15B.pt) |
-| AMoE-Dense-0.6B | Dense          | 0.6B          | 0.6B         | `dense-0.6B` | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-0.6B.pt) |
-| AMoE-Dense-70M  | Dense          | 0.07B         | 0.07B        | `dense-70M`  | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-70M.pt)  |
-| AMoE-Dense-30M  | Dense          | 0.03B         | 0.03B        | `dense-30M`  | [Download](https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-30M.pt)  |
+| Model           | Architecture   | Active Params | Total Params | Config Name           | Checkpoint                                                                                      |
+| --------------- | -------------- | ------------- | ------------ | --------------------- | ----------------------------------------------------------------------------------------------- |
+| SigLino-MoE-0.3-0.6B | MoE (top-6/28) | 0.3B          | 0.6B         | `siglino-moe-0.3B`    | [Download](https://github.com/tiiuae/siglino/releases/download/SigLino-checkpoint/siglino-moe-0.3B.pt)   |
+| SigLino-MoE-0.15-0.6B | MoE (top-2/28) | 0.15B         | 0.6B         | `siglino-moe-0.15B`   | [Download](https://github.com/tiiuae/siglino/releases/download/SigLino-checkpoint/siglino-moe-0.15B.pt)  |
+| SigLino-0.6B    | Dense          | 0.6B          | 0.6B         | `siglino-0.6B`        | [Download](https://github.com/tiiuae/siglino/releases/download/SigLino-checkpoint/siglino-0.6B.pt)       |
+| SigLino-70M     | Dense          | 0.07B         | 0.07B        | `siglino-70M`         | [Download](https://github.com/tiiuae/siglino/releases/download/SigLino-checkpoint/siglino-70M.pt)        |
+| SigLino-30M     | Dense          | 0.03B         | 0.03B        | `siglino-30M`         | [Download](https://github.com/tiiuae/siglino/releases/download/SigLino-checkpoint/siglino-30M.pt)        |
 
 
 ## Installation
@@ -33,19 +36,19 @@ pip install -e .
 
 ## Quick Start
 
-### AMoE-0.15B (MoE, top-2/28, 0.15B active / 0.6B total)
+### SigLino-MoE-0.15B (MoE, top-2/28, 0.15B active / 0.6B total)
 
 ```python
-from amoe import load_amoe_model
+from siglino import load_siglino_model
 from PIL import Image
 import torch
 
 # Download checkpoint
-# wget https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/amoe-0.15B.pt
+# wget https://github.com/tiiuae/siglino/releases/download/SigLino-checkpoint/siglino-moe-0.15B.pt
 
-model, processor = load_amoe_model(
-    checkpoint_path="amoe-0.15B.pt",
-    config_name="amoe-0.15B",
+model, processor = load_siglino_model(
+    checkpoint_path="siglino-moe-0.15B.pt",
+    config_name="siglino-moe-0.15B",
     device="cuda",
 )
 model = model.to(torch.bfloat16)
@@ -71,22 +74,22 @@ with torch.no_grad():
     pooled_features = outputs["summary_features"]["siglip2"]  # (N, 1152)
 
     # Native model features
-    amoe_features = outputs["patch_features"]["amoe"]  # (N, L, 768)
+    siglino_features = outputs["patch_features"]["siglino"]  # (N, L, 768)
 ```
 
-### AMoE-Dense-0.6B
+### SigLino-0.6B
 
 ```python
-from amoe import load_amoe_model
+from siglino import load_siglino_model
 from PIL import Image
 import torch
 
 # Download checkpoint
-# wget https://github.com/tiiuae/amoe/releases/download/AMoE-checkpoint/dense-0.6B.pt
+# wget https://github.com/tiiuae/siglino/releases/download/SigLino-checkpoint/siglino-0.6B.pt
 
-model, processor = load_amoe_model(
-    checkpoint_path="dense-0.6B.pt",
-    config_name="dense-0.6B",
+model, processor = load_siglino_model(
+    checkpoint_path="siglino-0.6B.pt",
+    config_name="siglino-0.6B",
     device="cuda",
 )
 model = model.to(torch.bfloat16)
@@ -112,7 +115,7 @@ with torch.no_grad():
     pooled_features = outputs["summary_features"]["siglip2"]  # (N, 1152)
 
     # Native model features
-    amoe_features = outputs["patch_features"]["amoe"]  # (N, L, 1280)
+    siglino_features = outputs["patch_features"]["siglino"]  # (N, L, 1280)
 ```
 
 ## Results
@@ -124,11 +127,11 @@ All results use ensemble features (combined DINOv3 + SigLIP2 heads) unless noted
 
 | Model           | Params (active) | ImageNet | CUB-200 | Food-101 | DTD  | Aircraft | Flowers-102 | Avg  |
 | --------------- | --------------- | -------- | ------- | -------- | ---- | -------- | ----------- | ---- |
-| AMoE-0.3B       | 0.3B            | 85.9     | 88.9    | 95.5     | 80.6 | 92.3     | 99.8        | 90.5 |
-| AMoE-0.15B      | 0.15B           | 85.0     | 88.2    | 94.6     | 79.9 | 91.5     | 99.8        | 89.8 |
-| AMoE-Dense-0.6B | 0.6B            | 86.1     | 89.2    | 95.8     | 81.1 | 92.3     | 99.8        | 90.7 |
-| AMoE-Dense-70M  | 0.07B           | 81.7     | 84.8    | 90.2     | 77.3 | 83.3     | 99.6        | 86.2 |
-| AMoE-Dense-30M  | 0.03B           | 79.0     | 80.9    | 87.5     | 75.7 | 77.3     | 99.2        | 83.3 |
+| SigLino-MoE-0.3B | 0.3B            | 85.9     | 88.9    | 95.5     | 80.6 | 92.3     | 99.8        | 90.5 |
+| SigLino-MoE-0.15B | 0.15B           | 85.0     | 88.2    | 94.6     | 79.9 | 91.5     | 99.8        | 89.8 |
+| SigLino-0.6B    | 0.6B            | 86.1     | 89.2    | 95.8     | 81.1 | 92.3     | 99.8        | 90.7 |
+| SigLino-70M     | 0.07B           | 81.7     | 84.8    | 90.2     | 77.3 | 83.3     | 99.6        | 86.2 |
+| SigLino-30M     | 0.03B           | 79.0     | 80.9    | 87.5     | 75.7 | 77.3     | 99.2        | 83.3 |
 
 
 ### Zero-Shot Image-Text Classification (512x512)
@@ -136,11 +139,11 @@ All results use ensemble features (combined DINOv3 + SigLIP2 heads) unless noted
 
 | Model           | ImageNet | CUB-200 | Food-101 | DTD  | Aircraft | Flowers-102 | Caltech-101 | Avg  |
 | --------------- | -------- | ------- | -------- | ---- | -------- | ----------- | ----------- | ---- |
-| AMoE-0.3B       | 79.9     | 82.6    | 94.6     | 69.9 | 83.5     | 88.6        | 88.4        | 83.9 |
-| AMoE-0.15B      | 78.8     | 80.9    | 93.4     | 69.5 | 81.4     | 89.0        | 88.6        | 83.1 |
-| AMoE-Dense-0.6B | 80.5     | 83.0    | 95.0     | 71.1 | 82.4     | 89.0        | 89.9        | 84.4 |
-| AMoE-Dense-70M  | 71.2     | 70.7    | 85.2     | 65.7 | 60.1     | 84.0        | 88.3        | 75.0 |
-| AMoE-Dense-30M  | 65.1     | 59.9    | 80.3     | 62.9 | 48.3     | 77.4        | 87.2        | 68.7 |
+| SigLino-MoE-0.3B | 79.9     | 82.6    | 94.6     | 69.9 | 83.5     | 88.6        | 88.4        | 83.9 |
+| SigLino-MoE-0.15B | 78.8     | 80.9    | 93.4     | 69.5 | 81.4     | 89.0        | 88.6        | 83.1 |
+| SigLino-0.6B    | 80.5     | 83.0    | 95.0     | 71.1 | 82.4     | 89.0        | 89.9        | 84.4 |
+| SigLino-70M     | 71.2     | 70.7    | 85.2     | 65.7 | 60.1     | 84.0        | 88.3        | 75.0 |
+| SigLino-30M     | 65.1     | 59.9    | 80.3     | 62.9 | 48.3     | 77.4        | 87.2        | 68.7 |
 
 
 ### Retrieval R@1 (512x512)
@@ -148,11 +151,11 @@ All results use ensemble features (combined DINOv3 + SigLIP2 heads) unless noted
 
 | Model           | Flickr30K T2I | Flickr30K I2T | MSCOCO T2I | MSCOCO I2T |
 | --------------- | ------------- | ------------- | ---------- | ---------- |
-| AMoE-0.3B       | 81.6          | 94.6          | 54.7       | 70.8       |
-| AMoE-0.15B      | 81.0          | 92.9          | 54.2       | 71.1       |
-| AMoE-Dense-0.6B | 81.9          | 94.2          | 55.6       | 72.9       |
-| AMoE-Dense-70M  | 77.5          | 90.5          | 50.4       | 65.4       |
-| AMoE-Dense-30M  | 72.9          | 82.2          | 46.6       | 59.7       |
+| SigLino-MoE-0.3B | 81.6          | 94.6          | 54.7       | 70.8       |
+| SigLino-MoE-0.15B | 81.0          | 92.9          | 54.2       | 71.1       |
+| SigLino-0.6B    | 81.9          | 94.2          | 55.6       | 72.9       |
+| SigLino-70M     | 77.5          | 90.5          | 50.4       | 65.4       |
+| SigLino-30M     | 72.9          | 82.2          | 46.6       | 59.7       |
 
 
 ### Linear Segmentation mIoU (1024x1024)
@@ -160,11 +163,11 @@ All results use ensemble features (combined DINOv3 + SigLIP2 heads) unless noted
 
 | Model           | Pascal VOC | Cityscapes |
 | --------------- | ---------- | ---------- |
-| AMoE-0.3B       | 88.9       | 65.4       |
-| AMoE-0.15B      | 88.1       | 63.6       |
-| AMoE-Dense-0.6B | 89.8       | 67.3       |
-| AMoE-Dense-70M  | 84.8       | 61.6       |
-| AMoE-Dense-30M  | 82.1       | 59.2       |
+| SigLino-MoE-0.3B | 88.9       | 65.4       |
+| SigLino-MoE-0.15B | 88.1       | 63.6       |
+| SigLino-0.6B    | 89.8       | 67.3       |
+| SigLino-70M     | 84.8       | 61.6       |
+| SigLino-30M     | 82.1       | 59.2       |
 
 
 ## PCA Visualization
@@ -181,7 +184,9 @@ python pca_maps.py \
 
 Sample output:
 
-![PCA visualization sample 1](pca_maps_amoe/pca_visualizations/pca_instance.png)
+<p align="center">
+  <img src="pca_maps_siglino/pca_visualizations/pca_instance.png" width="800">
+</p>
 
 ## HF usage
 
@@ -191,7 +196,7 @@ from PIL import Image
 from transformers import AutoModel, AutoImageProcessor
 
 # Load model and processor
-model_id = "tiiuae/amoe-0.3B-0.6B"
+model_id = "tiiuae/siglino-moe-0.3-0.6B"
 model = AutoModel.from_pretrained(model_id, trust_remote_code=True).to("cuda", dtype=torch.bfloat16)
 processor = AutoImageProcessor.from_pretrained(model_id, trust_remote_code=True)
 
@@ -205,22 +210,21 @@ with torch.no_grad():
     outputs = model(**inputs)
 
 # Access specialized features
-# Options: 'amoe' (768d), 'siglip2' (1152d), 'dinov3' (1024d)
-patch_features = outputs["patch_features"]["amoe"]    # (Batch, Tokens, 768)
+# Options: 'siglino' (768d), 'siglip2' (1152d), 'dinov3' (1024d)
+patch_features = outputs["patch_features"]["siglino"]    # (Batch, Tokens, 768)
 summary_features = outputs["summary_features"]["siglip2"] # (Batch, 1152)
 
 ```
 
 ## Citation
 
-If you use AMoE in your research, please cite:
+If you use SigLino in your research, please cite:
 
 ```bibtex
-@article{chaybouti2025amoe,
-  title={AMOE: Agglomerative Mixture-of-Experts Vision Foundation Models},
-  author={Chaybouti, Sofian and Narayan, Sanath and Dahou, Yasser and Le Khac, Phuc H. and Singh, Ankit and Huynh, Ngoc Dung and Para, Wamiq Reyaz and Kuehne, Hilde and Hacid, Hakim},
+@article{chaybouti2025siglino,
+  title={SigLino: Vision Foundation Models distilled from SigLIP2 and DINOv3},
+  author={Chaybouti, Sofian and Narayan, Sanath and Dahou, Yasser context, Le Khac, Phuc H. and Singh, Ankit and Huynh, Ngoc Dung and Para, Wamiq Reyaz and Kuehne, Hilde and Hacid, Hakim},
   journal={arXiv preprint arXiv:2512.20157},
   year={2025}
 }
 ```
-
